@@ -136,7 +136,7 @@ def leapfrog(q, p, epsilon, n_steps, grad_log_prob_fn):
     return q_current, p_current
 
 
-def hmc_step(key, q, epsilon, n_steps, log_prob_fn):
+def hmc_step(key, q, epsilon, n_steps, log_prob_fn, grad_log_prob_fn=None):
     """Perform a single HMC step with Metropolis acceptance.
 
     Args:
@@ -145,6 +145,7 @@ def hmc_step(key, q, epsilon, n_steps, log_prob_fn):
         epsilon: Step size for leapfrog integration
         n_steps: Number of leapfrog steps per HMC step
         log_prob_fn: Function that computes log probability at position q
+        grad_log_prob_fn: Optional gradient function. If None, computed via jax.grad
 
     Returns:
         Tuple (q_new, accepted) where:
@@ -155,8 +156,10 @@ def hmc_step(key, q, epsilon, n_steps, log_prob_fn):
     key_momentum, key_accept = jax.random.split(key)
 
     # Sample momentum from standard normal (split keys for each parameter)
-    param_keys = jax.random.split(key_momentum, len(q))
-    p = {k: jax.random.normal(param_keys[i], shape=()) for i, k in enumerate(q)}
+    # Use sorted keys for deterministic ordering
+    param_names = sorted(q.keys())
+    param_keys = jax.random.split(key_momentum, len(param_names))
+    p = {name: jax.random.normal(param_keys[i], shape=()) for i, name in enumerate(param_names)}
 
     # Compute initial energy (Hamiltonian)
     # H = -log_prob(q) + 0.5 * ||p||^2
@@ -164,11 +167,12 @@ def hmc_step(key, q, epsilon, n_steps, log_prob_fn):
     kinetic_current = 0.5 * jnp.sum(jnp.array([p[k]**2 for k in p]))
     H_current = -log_prob_current + kinetic_current
 
-    # Create gradient function
-    grad_fn = jax.grad(log_prob_fn)
+    # Use provided gradient function or compute it
+    if grad_log_prob_fn is None:
+        grad_log_prob_fn = jax.grad(log_prob_fn)
 
     # Run leapfrog to get proposal
-    q_proposal, p_proposal = leapfrog(q, p, epsilon, n_steps, grad_fn)
+    q_proposal, p_proposal = leapfrog(q, p, epsilon, n_steps, grad_log_prob_fn)
 
     # Compute proposal energy
     log_prob_proposal = log_prob_fn(q_proposal)
@@ -204,10 +208,13 @@ def hmc_sample(key, initial_q, n_samples, epsilon, n_steps, log_prob_fn):
         Dict of arrays, where each array has shape (n_samples,) containing
         the sampled values for each parameter
     """
+    # Pre-compute gradient function once for efficiency
+    grad_log_prob_fn = jax.grad(log_prob_fn)
+
     def scan_fn(carry, scan_key):
         """Single iteration of HMC for jax.lax.scan."""
         q_current = carry
-        q_new, accepted = hmc_step(scan_key, q_current, epsilon, n_steps, log_prob_fn)
+        q_new, accepted = hmc_step(scan_key, q_current, epsilon, n_steps, log_prob_fn, grad_log_prob_fn)
         return q_new, q_new
 
     # Split keys for each HMC step
