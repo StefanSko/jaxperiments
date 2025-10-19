@@ -2,7 +2,7 @@
 
 ## Status: In Progress
 
-**Current Step**: Step 16 - Integration Test - Full Pipeline
+**Current Step**: Step 17 - Visualization Utilities
 
 ---
 
@@ -30,7 +30,7 @@
 ### Phase 4: Integration & Utilities
 - [x] Step 14: Data Generation Utilities
 - [x] Step 15: Configuration and Defaults
-- [ ] Step 16: Integration Test - Full Pipeline
+- [x] Step 16: Integration Test - Full Pipeline
 
 ### Phase 5: Visualization & Interfaces
 - [ ] Step 17: Visualization Utilities
@@ -63,9 +63,10 @@
 - **Step 13**: Implemented hmc_sample function using jax.lax.scan for efficient sampling. Returns dict of arrays with shape (n_samples,) for each parameter. All 21 tests passing.
 - **Step 14**: Created hmc/utils.py with generate_regression_data function for creating synthetic linear regression datasets. Added tests for shape verification, reproducibility, and randomness. All 24 tests passing.
 - **Step 15**: Added DEFAULT_HMC_CONFIG with reasonable defaults (epsilon=0.01, n_steps=20, n_warmup=500, n_samples=1000) and get_hmc_config function for configuration overrides. Added tests verifying default values and override behavior. All 26 tests passing.
+- **Step 16**: Created comprehensive integration test for full HMC pipeline on synthetic regression data. Tests verify sample structure, variation, parameter recovery, and exploration. Uses tuned hyperparameters (epsilon=0.001, n_steps=15) for reliable sampling. Integration test passes.
 
 ### Current Blockers
 None
 
 ### Next Actions
-Execute Step 16: Integration Test - Full Pipeline
+Execute Step 17: Visualization Utilities
