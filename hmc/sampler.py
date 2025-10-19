@@ -113,3 +113,24 @@ def leapfrog_step(q, p, epsilon, grad_log_prob_fn):
     p_new = {key: p_half[key] + 0.5 * epsilon * grad_new[key] for key in p_half}
 
     return q_new, p_new
+
+
+def leapfrog(q, p, epsilon, n_steps, grad_log_prob_fn):
+    """Perform a full leapfrog trajectory with multiple steps.
+
+    Args:
+        q: Initial position (dict with parameter values)
+        p: Initial momentum (dict with same structure as q)
+        epsilon: Step size for integration
+        n_steps: Number of leapfrog steps to perform
+        grad_log_prob_fn: Function that computes gradient of log probability
+
+    Returns:
+        Tuple (q_final, p_final) after n_steps iterations
+    """
+    q_current, p_current = q, p
+
+    for _ in range(n_steps):
+        q_current, p_current = leapfrog_step(q_current, p_current, epsilon, grad_log_prob_fn)
+
+    return q_current, p_current

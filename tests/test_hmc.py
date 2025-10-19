@@ -9,6 +9,7 @@ from hmc.sampler import (
     log_posterior,
     grad_log_posterior,
     leapfrog_step,
+    leapfrog,
 )
 
 
@@ -294,3 +295,52 @@ def test_leapfrog_energy_conservation():
     # For epsilon=0.001, expect error < 0.01
     assert energy_diff < 0.01, \
         f"Energy conservation violated: |H_final - H_initial| = {energy_diff} (initial: {H_initial}, final: {H_final})"
+
+
+def test_leapfrog_trajectory():
+    """Verify full leapfrog trajectory runs multiple steps correctly."""
+    x = jnp.array([1.0, 2.0, 3.0, 4.0, 5.0])
+    y = jnp.array([2.1, 4.0, 5.9, 8.2, 10.1])
+
+    # Initial position and momentum
+    q = {"m": 2.0, "b": 0.0, "log_sigma": -0.5}
+    p = {"m": 0.3, "b": 0.1, "log_sigma": 0.05}
+
+    epsilon = 0.01
+    n_steps = 20
+
+    def grad_fn(params):
+        return grad_log_posterior(params, x, y)
+
+    # Run full trajectory
+    q_final, p_final = leapfrog(q, p, epsilon, n_steps, grad_fn)
+
+    # Check outputs are dicts with correct keys
+    assert isinstance(q_final, dict), "q_final should be a dict"
+    assert isinstance(p_final, dict), "p_final should be a dict"
+    assert set(q_final.keys()) == set(q.keys()), "q_final should have same keys as q"
+    assert set(p_final.keys()) == set(p.keys()), "p_final should have same keys as p"
+
+    # Check values are scalars
+    for key in q_final:
+        assert jnp.ndim(q_final[key]) == 0, f"q_final[{key}] should be scalar"
+        assert jnp.ndim(p_final[key]) == 0, f"p_final[{key}] should be scalar"
+
+    # Verify position and momentum have changed
+    position_changed = any(not jnp.allclose(q[key], q_final[key]) for key in q)
+    momentum_changed = any(not jnp.allclose(p[key], p_final[key]) for key in p)
+
+    assert position_changed, "Position should change after trajectory"
+    assert momentum_changed, "Momentum should change after trajectory"
+
+    # Verify the trajectory is equivalent to running leapfrog_step n_steps times
+    q_manual, p_manual = q, p
+    for _ in range(n_steps):
+        q_manual, p_manual = leapfrog_step(q_manual, p_manual, epsilon, grad_fn)
+
+    # Results should match
+    for key in q:
+        assert jnp.allclose(q_final[key], q_manual[key], rtol=1e-10), \
+            f"q_final[{key}] should match manual iteration"
+        assert jnp.allclose(p_final[key], p_manual[key], rtol=1e-10), \
+            f"p_final[{key}] should match manual iteration"
