@@ -2,7 +2,7 @@
 
 ## Status: In Progress
 
-**Current Step**: Step 3 - Implement Log Probability Functions
+**Current Step**: Step 4 - Test Infrastructure for Gradients
 
 ---
 
@@ -11,7 +11,7 @@
 ### Phase 1: Project Setup & Infrastructure
 - [x] Step 1: Project Initialization
 - [x] Step 2: Test Infrastructure for Log Probability
-- [ ] Step 3: Implement Log Probability Functions
+- [x] Step 3: Implement Log Probability Functions
 - [ ] Step 4: Test Infrastructure for Gradients
 - [ ] Step 5: Implement Gradient Function
 
@@ -50,9 +50,10 @@
 ### Completed Steps
 - **Step 1**: Project initialized with UV, dependencies installed (jax, jaxlib, matplotlib, pytest, jupyter), directory structure created
 - **Step 2**: Test infrastructure for log probability functions created (4 failing tests)
+- **Step 3**: Implemented log_prior, log_likelihood, and log_posterior functions in hmc/sampler.py. All 4 tests passing.
 
 ### Current Blockers
 None
 
 ### Next Actions
-Execute Step 3: Implement Log Probability Functions
+Execute Step 4: Test Infrastructure for Gradients
