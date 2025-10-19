@@ -16,9 +16,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import jax.numpy as jnp
 import jax.random as random
+import matplotlib.pyplot as plt
 
 from hmc.sampler import hmc_sample, log_posterior
-from hmc.utils import generate_regression_data, get_hmc_config
+from hmc.utils import generate_regression_data, get_hmc_config, plot_trace
 
 
 def main():
@@ -128,15 +129,45 @@ def main():
     print(f"  Final m: {samples_random['m'][-1]:.4f}")
     print(f"  Final b: {samples_random['b'][-1]:.4f}")
 
-    # Placeholder for plotting (will be implemented in Part 2)
+    # Create comparison plots
     print("\n[5/5] Generating comparison plots...")
-    print(f"  (Plotting will be implemented in Part 2)")
-    print(f"\n  Fixed seed samples: {len(samples_fixed['m'])} points")
+    param_names = ["m", "b", "log_sigma"]
+    n_params = len(param_names)
+
+    # Create figure with 2 rows (fixed seed top, random seed bottom)
+    fig, axes = plt.subplots(2, n_params, figsize=(15, 8))
+
+    # Plot fixed seed traces (top row)
+    for i, param_name in enumerate(param_names):
+        axes[0, i].plot(samples_fixed[param_name], alpha=0.7, linewidth=1)
+        axes[0, i].set_ylabel(param_name)
+        axes[0, i].set_xlabel("Iteration")
+        axes[0, i].grid(True, alpha=0.3)
+        axes[0, i].set_title(f"{param_name} (Fixed Seed)")
+
+    # Plot random seed traces (bottom row)
+    for i, param_name in enumerate(param_names):
+        axes[1, i].plot(samples_random[param_name], alpha=0.7, linewidth=1)
+        axes[1, i].set_ylabel(param_name)
+        axes[1, i].set_xlabel("Iteration")
+        axes[1, i].grid(True, alpha=0.3)
+        axes[1, i].set_title(f"{param_name} (Random Seed)")
+
+    # Add overall title
+    fig.suptitle("HMC Trace Plots: Fixed vs Random Seed Comparison", fontsize=14, y=0.995)
+    fig.tight_layout()
+
+    # Save figure
+    fig.savefig(args.output_path, dpi=150, bbox_inches='tight')
+    plt.close(fig)
+
+    print(f"  Saved comparison plot to: {args.output_path}")
+    print(f"  Fixed seed samples: {len(samples_fixed['m'])} points")
     print(f"  Random seed samples: {len(samples_random['m'])} points")
 
     print("\n" + "=" * 60)
     print("Sampling complete!")
-    print(f"Output will be saved to: {args.output_path}")
+    print(f"View the results at: {args.output_path}")
     print("=" * 60)
 
 
