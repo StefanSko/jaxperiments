@@ -3,6 +3,7 @@
 
 import jax.numpy as jnp
 import jax.random as random
+import matplotlib.pyplot as plt
 
 
 # Default HMC hyperparameters
@@ -52,3 +53,33 @@ def generate_regression_data(key, n_samples, m_true, b_true, sigma_true, x_range
     y = m_true * x + b_true + noise
 
     return x, y
+
+
+def plot_trace(samples, param_names, title="Trace Plot"):
+    """Create trace plots for MCMC samples.
+
+    Args:
+        samples: Dictionary of parameter arrays with shape (n_samples,) each
+        param_names: List of parameter names to plot (keys in samples dict)
+        title: Overall title for the plot
+
+    Returns:
+        matplotlib Figure object
+    """
+    n_params = len(param_names)
+    fig, axes = plt.subplots(n_params, 1, figsize=(10, 2 * n_params))
+
+    # Handle single parameter case
+    if n_params == 1:
+        axes = [axes]
+
+    for i, param_name in enumerate(param_names):
+        axes[i].plot(samples[param_name])
+        axes[i].set_ylabel(param_name)
+        axes[i].set_xlabel("Iteration")
+        axes[i].grid(True, alpha=0.3)
+
+    fig.suptitle(title)
+    fig.tight_layout()
+
+    return fig

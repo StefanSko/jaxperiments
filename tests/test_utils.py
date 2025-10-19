@@ -3,7 +3,8 @@
 import jax.numpy as jnp
 import jax.random as random
 import pytest
-from hmc.utils import generate_regression_data, DEFAULT_HMC_CONFIG, get_hmc_config
+import matplotlib.pyplot as plt
+from hmc.utils import generate_regression_data, DEFAULT_HMC_CONFIG, get_hmc_config, plot_trace
 
 
 def test_generate_regression_data_shape():
@@ -83,3 +84,35 @@ def test_config_overrides():
     # Test that original DEFAULT_HMC_CONFIG is not modified
     assert DEFAULT_HMC_CONFIG["epsilon"] == 0.01
     assert DEFAULT_HMC_CONFIG["n_steps"] == 20
+
+
+def test_plot_trace_creates_figure():
+    """Test that plot_trace creates a figure with correct subplots."""
+    # Create sample data
+    n_samples = 100
+    samples = {
+        "m": jnp.linspace(0, 1, n_samples),
+        "b": jnp.linspace(1, 2, n_samples),
+        "log_sigma": jnp.linspace(-1, 0, n_samples),
+    }
+    param_names = ["m", "b", "log_sigma"]
+
+    # Create plot
+    fig = plot_trace(samples, param_names, title="Test Trace Plot")
+
+    # Verify figure is created
+    assert fig is not None
+    assert isinstance(fig, plt.Figure)
+
+    # Verify correct number of subplots
+    axes = fig.get_axes()
+    assert len(axes) == len(param_names), f"Expected {len(param_names)} subplots, got {len(axes)}"
+
+    # Verify each subplot has correct labels
+    for i, param_name in enumerate(param_names):
+        ax = axes[i]
+        assert ax.get_ylabel() == param_name, f"Expected ylabel '{param_name}', got '{ax.get_ylabel()}'"
+        assert ax.get_xlabel() == "Iteration", f"Expected xlabel 'Iteration', got '{ax.get_xlabel()}'"
+
+    # Clean up
+    plt.close(fig)
