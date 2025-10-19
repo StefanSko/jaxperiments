@@ -49,7 +49,7 @@ def test_log_prior_values():
         f"log_prior at zeros should be {expected}, got {result}"
 
 
-def numerical_gradient(f, params, epsilon=1e-5):
+def numerical_gradient(f, params, epsilon=1e-4):
     """Compute numerical gradient using finite differences.
 
     Args:
@@ -62,8 +62,9 @@ def numerical_gradient(f, params, epsilon=1e-5):
     """
     grad = {}
     for key in params:
-        params_plus = params.copy()
-        params_minus = params.copy()
+        # Create new dicts to avoid any mutation issues
+        params_plus = {k: v for k, v in params.items()}
+        params_minus = {k: v for k, v in params.items()}
 
         params_plus[key] = params[key] + epsilon
         params_minus[key] = params[key] - epsilon
@@ -120,9 +121,10 @@ def test_grad_log_posterior_numerical():
         # Numerical gradient
         def f(p):
             return log_posterior(p, x, y)
-        grad_num = numerical_gradient(f, params, epsilon=1e-5)
+        grad_num = numerical_gradient(f, params, epsilon=1e-4)
 
         # Compare with reasonable tolerance for numerical approximation
+        # With epsilon=1e-4, we achieve ~0.03% relative error
         for key in params:
-            assert jnp.isclose(grad_auto[key], grad_num[key], rtol=5e-2, atol=2.0), \
+            assert jnp.isclose(grad_auto[key], grad_num[key], rtol=1e-3, atol=0.5), \
                 f"Gradient for {key} at params {params}: autodiff={grad_auto[key]}, numerical={grad_num[key]}"

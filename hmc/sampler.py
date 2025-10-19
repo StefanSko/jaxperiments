@@ -64,6 +64,10 @@ def log_posterior(params, x, y):
     return log_prior(params) + log_likelihood(params, x, y)
 
 
+# Define gradient function at module level for efficiency
+_grad_log_posterior_fn = jax.grad(log_posterior)
+
+
 def grad_log_posterior(params, x, y):
     """Compute gradient of log posterior with respect to parameters.
 
@@ -77,5 +81,4 @@ def grad_log_posterior(params, x, y):
     Returns:
         Dict with same structure as params containing gradients
     """
-    grad_fn = jax.grad(log_posterior)
-    return grad_fn(params, x, y)
+    return _grad_log_posterior_fn(params, x, y)
