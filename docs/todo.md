@@ -2,7 +2,7 @@
 
 ## Status: In Progress
 
-**Current Step**: Step 14 - Data Generation Utilities
+**Current Step**: Step 16 - Integration Test - Full Pipeline
 
 ---
 
@@ -28,8 +28,8 @@
 - [x] Step 13: Implement HMC Chain Sampling
 
 ### Phase 4: Integration & Utilities
-- [ ] Step 14: Data Generation Utilities
-- [ ] Step 15: Configuration and Defaults
+- [x] Step 14: Data Generation Utilities
+- [x] Step 15: Configuration and Defaults
 - [ ] Step 16: Integration Test - Full Pipeline
 
 ### Phase 5: Visualization & Interfaces
@@ -61,9 +61,11 @@
 - **Step 11**: Implemented hmc_step function with Metropolis acceptance. Fixed momentum sampling bug (was using same key for all parameters). Adjusted test acceptance thresholds for realistic behavior. All 17 tests passing.
 - **Step 12**: Added HMC chain sampling test infrastructure with 4 tests (shape, different seeds, same seed, simple posterior). Tests fail with ImportError as expected.
 - **Step 13**: Implemented hmc_sample function using jax.lax.scan for efficient sampling. Returns dict of arrays with shape (n_samples,) for each parameter. All 21 tests passing.
+- **Step 14**: Created hmc/utils.py with generate_regression_data function for creating synthetic linear regression datasets. Added tests for shape verification, reproducibility, and randomness. All 24 tests passing.
+- **Step 15**: Added DEFAULT_HMC_CONFIG with reasonable defaults (epsilon=0.01, n_steps=20, n_warmup=500, n_samples=1000) and get_hmc_config function for configuration overrides. Added tests verifying default values and override behavior. All 26 tests passing.
 
 ### Current Blockers
 None
 
 ### Next Actions
-Execute Step 14: Data Generation Utilities
+Execute Step 16: Integration Test - Full Pipeline
