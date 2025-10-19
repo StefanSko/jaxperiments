@@ -187,3 +187,33 @@ def hmc_step(key, q, epsilon, n_steps, log_prob_fn):
     q_new = jax.tree.map(lambda prop, curr: jnp.where(accepted, prop, curr), q_proposal, q)
 
     return q_new, accepted
+
+
+def hmc_sample(key, initial_q, n_samples, epsilon, n_steps, log_prob_fn):
+    """Sample a chain of positions using HMC.
+
+    Args:
+        key: JAX random key for sampling
+        initial_q: Initial position (dict with parameter values)
+        n_samples: Number of samples to draw
+        epsilon: Step size for leapfrog integration
+        n_steps: Number of leapfrog steps per HMC step
+        log_prob_fn: Function that computes log probability at position q
+
+    Returns:
+        Dict of arrays, where each array has shape (n_samples,) containing
+        the sampled values for each parameter
+    """
+    def scan_fn(carry, scan_key):
+        """Single iteration of HMC for jax.lax.scan."""
+        q_current = carry
+        q_new, accepted = hmc_step(scan_key, q_current, epsilon, n_steps, log_prob_fn)
+        return q_new, q_new
+
+    # Split keys for each HMC step
+    keys = jax.random.split(key, n_samples)
+
+    # Run scan to collect all samples
+    _, samples_dict = jax.lax.scan(scan_fn, initial_q, keys)
+
+    return samples_dict

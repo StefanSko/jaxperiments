@@ -2,7 +2,7 @@
 
 ## Status: In Progress
 
-**Current Step**: Step 12 - Test Full HMC Chain
+**Current Step**: Step 14 - Data Generation Utilities
 
 ---
 
@@ -24,8 +24,8 @@
 ### Phase 3: HMC Sampler Core
 - [x] Step 10: Test Infrastructure for HMC Step
 - [x] Step 11: Implement HMC Step
-- [ ] Step 12: Test Full HMC Chain
-- [ ] Step 13: Implement HMC Chain Sampling
+- [x] Step 12: Test Full HMC Chain
+- [x] Step 13: Implement HMC Chain Sampling
 
 ### Phase 4: Integration & Utilities
 - [ ] Step 14: Data Generation Utilities
@@ -59,9 +59,11 @@
 - **Step 9**: Implemented leapfrog function for full trajectories. Added test verifying n_steps iterations matches manual iteration. All 13 tests passing.
 - **Step 10**: Added HMC step test infrastructure with 4 tests (returns state, accepts better states, rejects worse states, uses random key). Tests fail with ImportError as expected.
 - **Step 11**: Implemented hmc_step function with Metropolis acceptance. Fixed momentum sampling bug (was using same key for all parameters). Adjusted test acceptance thresholds for realistic behavior. All 17 tests passing.
+- **Step 12**: Added HMC chain sampling test infrastructure with 4 tests (shape, different seeds, same seed, simple posterior). Tests fail with ImportError as expected.
+- **Step 13**: Implemented hmc_sample function using jax.lax.scan for efficient sampling. Returns dict of arrays with shape (n_samples,) for each parameter. All 21 tests passing.
 
 ### Current Blockers
 None
 
 ### Next Actions
-Execute Step 12: Test Full HMC Chain
+Execute Step 14: Data Generation Utilities

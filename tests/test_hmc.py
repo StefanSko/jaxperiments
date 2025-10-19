@@ -465,3 +465,123 @@ def test_hmc_step_uses_random_key():
             break
 
     assert results_differ, "Different random keys should produce different results"
+
+
+def test_hmc_sample_shape():
+    """Verify HMC chain sampling returns correct shape."""
+    from hmc.sampler import hmc_sample
+
+    x = jnp.array([1.0, 2.0, 3.0, 4.0, 5.0])
+    y = jnp.array([2.1, 4.0, 5.9, 8.2, 10.1])
+
+    initial_q = {"m": 2.0, "b": 0.0, "log_sigma": -0.5}
+    n_samples = 50
+    epsilon = 0.01
+    n_steps = 10
+
+    def log_prob_fn(params):
+        return log_posterior(params, x, y)
+
+    key = jax.random.PRNGKey(42)
+    samples = hmc_sample(key, initial_q, n_samples, epsilon, n_steps, log_prob_fn)
+
+    # Should return a dict of arrays
+    assert isinstance(samples, dict), "Samples should be a dict"
+    assert set(samples.keys()) == set(initial_q.keys()), "Samples should have same keys as initial_q"
+
+    # Each array should have shape (n_samples,)
+    for param_name in samples:
+        assert samples[param_name].shape == (n_samples,), \
+            f"samples[{param_name}] should have shape ({n_samples},), got {samples[param_name].shape}"
+
+
+def test_hmc_sample_different_seeds():
+    """Different random keys should give different sample chains."""
+    from hmc.sampler import hmc_sample
+
+    x = jnp.array([1.0, 2.0, 3.0, 4.0, 5.0])
+    y = jnp.array([2.1, 4.0, 5.9, 8.2, 10.1])
+
+    initial_q = {"m": 2.0, "b": 0.0, "log_sigma": -0.5}
+    n_samples = 30
+    epsilon = 0.01
+    n_steps = 10
+
+    def log_prob_fn(params):
+        return log_posterior(params, x, y)
+
+    key1 = jax.random.PRNGKey(111)
+    key2 = jax.random.PRNGKey(222)
+
+    samples1 = hmc_sample(key1, initial_q, n_samples, epsilon, n_steps, log_prob_fn)
+    samples2 = hmc_sample(key2, initial_q, n_samples, epsilon, n_steps, log_prob_fn)
+
+    # Samples should differ (at least for some parameter)
+    samples_differ = False
+    for param_name in samples1:
+        if not jnp.allclose(samples1[param_name], samples2[param_name]):
+            samples_differ = True
+            break
+
+    assert samples_differ, "Different random keys should produce different sample chains"
+
+
+def test_hmc_sample_same_seed():
+    """Same random key should give identical sample chains."""
+    from hmc.sampler import hmc_sample
+
+    x = jnp.array([1.0, 2.0, 3.0, 4.0, 5.0])
+    y = jnp.array([2.1, 4.0, 5.9, 8.2, 10.1])
+
+    initial_q = {"m": 2.0, "b": 0.0, "log_sigma": -0.5}
+    n_samples = 30
+    epsilon = 0.01
+    n_steps = 10
+
+    def log_prob_fn(params):
+        return log_posterior(params, x, y)
+
+    key = jax.random.PRNGKey(42)
+
+    samples1 = hmc_sample(key, initial_q, n_samples, epsilon, n_steps, log_prob_fn)
+    samples2 = hmc_sample(key, initial_q, n_samples, epsilon, n_steps, log_prob_fn)
+
+    # Samples should be identical
+    for param_name in samples1:
+        assert jnp.allclose(samples1[param_name], samples2[param_name]), \
+            f"Same key should produce identical samples for {param_name}"
+
+
+def test_hmc_sample_simple_posterior():
+    """For a simple posterior, verify samples are reasonable."""
+    from hmc.sampler import hmc_sample
+
+    # Use simple data where true parameters are known
+    x = jnp.array([1.0, 2.0, 3.0, 4.0, 5.0])
+    # Generate y from y = 2.0*x + 1.0 with small noise
+    y = jnp.array([3.0, 5.0, 7.0, 9.0, 11.0])
+
+    initial_q = {"m": 0.0, "b": 0.0, "log_sigma": 0.0}
+    n_samples = 100
+    epsilon = 0.05
+    n_steps = 10
+
+    def log_prob_fn(params):
+        return log_posterior(params, x, y)
+
+    key = jax.random.PRNGKey(42)
+    samples = hmc_sample(key, initial_q, n_samples, epsilon, n_steps, log_prob_fn)
+
+    # Compute means (should be close to true values: m=2.0, b=1.0)
+    mean_m = jnp.mean(samples["m"])
+    mean_b = jnp.mean(samples["b"])
+
+    # Check that means are in a reasonable range (not exact due to priors and noise)
+    assert 1.0 < mean_m < 3.0, f"Mean of m should be near 2.0, got {mean_m}"
+    assert 0.0 < mean_b < 2.0, f"Mean of b should be near 1.0, got {mean_b}"
+
+    # Check that samples vary (not all identical)
+    std_m = jnp.std(samples["m"])
+    std_b = jnp.std(samples["b"])
+    assert std_m > 0.01, f"Samples for m should vary, got std={std_m}"
+    assert std_b > 0.01, f"Samples for b should vary, got std={std_b}"
