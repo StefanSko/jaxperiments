@@ -229,3 +229,68 @@ def test_leapfrog_step_modifies_momentum():
             break
 
     assert momentum_changed, "Momentum should change after leapfrog step"
+
+
+def hamiltonian(q, p, log_prob_fn):
+    """Compute Hamiltonian (total energy) for HMC.
+
+    H(q, p) = -log_prob(q) + 0.5 * ||p||^2
+
+    Args:
+        q: Position (dict with parameter values)
+        p: Momentum (dict with same structure as q)
+        log_prob_fn: Function that computes log probability at q
+
+    Returns:
+        Scalar Hamiltonian value
+    """
+    # Potential energy: -log_prob(q)
+    potential = -log_prob_fn(q)
+
+    # Kinetic energy: 0.5 * sum(p_i^2)
+    kinetic = 0.5 * sum(p[key]**2 for key in p)
+
+    return potential + kinetic
+
+
+def test_leapfrog_energy_conservation():
+    """Verify leapfrog integrator approximately conserves energy."""
+    # Use a simple quadratic potential for testing
+    # This makes energy conservation easier to verify
+    x = jnp.array([1.0, 2.0, 3.0, 4.0, 5.0])
+    y = jnp.array([2.1, 4.0, 5.9, 8.2, 10.1])
+
+    # Initial position and momentum
+    q = {"m": 2.0, "b": 0.0, "log_sigma": -0.5}
+    p = {"m": 0.3, "b": 0.1, "log_sigma": 0.05}
+
+    # Small step size for better energy conservation
+    epsilon = 0.001
+    n_steps = 10
+
+    # Define log probability function and gradient
+    def log_prob(params):
+        return log_posterior(params, x, y)
+
+    def grad_fn(params):
+        return grad_log_posterior(params, x, y)
+
+    # Compute initial energy
+    H_initial = hamiltonian(q, p, log_prob)
+
+    # Run multiple leapfrog steps
+    q_current, p_current = q, p
+    for _ in range(n_steps):
+        q_current, p_current = leapfrog_step(q_current, p_current, epsilon, grad_fn)
+
+    # Compute final energy
+    H_final = hamiltonian(q_current, p_current, log_prob)
+
+    # Energy should be approximately conserved
+    # With small step size (0.001) and few steps (10), error should be very small
+    # Leapfrog is second-order accurate, so error scales as O(epsilon^2)
+    energy_diff = jnp.abs(H_final - H_initial)
+
+    # For epsilon=0.001, expect error < 0.01
+    assert energy_diff < 0.01, \
+        f"Energy conservation violated: |H_final - H_initial| = {energy_diff} (initial: {H_initial}, final: {H_final})"

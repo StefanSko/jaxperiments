@@ -2,7 +2,7 @@
 
 ## Status: In Progress
 
-**Current Step**: Step 8 - Test Leapfrog Energy Conservation
+**Current Step**: Step 9 - Implement Full Leapfrog Trajectory
 
 ---
 
@@ -18,7 +18,7 @@
 ### Phase 2: Leapfrog Integrator
 - [x] Step 6: Test Infrastructure for Leapfrog Step
 - [x] Step 7: Implement Single Leapfrog Step
-- [ ] Step 8: Test Leapfrog Energy Conservation
+- [x] Step 8: Test Leapfrog Energy Conservation
 - [ ] Step 9: Implement Full Leapfrog Trajectory
 
 ### Phase 3: HMC Sampler Core
@@ -55,9 +55,10 @@
 - **Step 5**: Implemented grad_log_posterior using JAX autodiff. All 7 tests passing (adjusted numerical test tolerances).
 - **Step 6**: Added leapfrog integrator test infrastructure with 4 tests (shapes, deterministic, modifies position, modifies momentum). Tests fail with ImportError as expected.
 - **Step 7**: Implemented leapfrog_step function using standard Störmer-Verlet integrator equations. All 11 tests passing.
+- **Step 8**: Added energy conservation test with hamiltonian helper function. Verified leapfrog integrator conserves energy to O(epsilon^2). All 12 tests passing.
 
 ### Current Blockers
 None
 
 ### Next Actions
-Execute Step 8: Test Leapfrog Energy Conservation
+Execute Step 9: Implement Full Leapfrog Trajectory
