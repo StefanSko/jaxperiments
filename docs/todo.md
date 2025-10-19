@@ -2,7 +2,7 @@
 
 ## Status: In Progress
 
-**Current Step**: Step 2 - Test Infrastructure for Log Probability
+**Current Step**: Step 3 - Implement Log Probability Functions
 
 ---
 
@@ -10,7 +10,7 @@
 
 ### Phase 1: Project Setup & Infrastructure
 - [x] Step 1: Project Initialization
-- [ ] Step 2: Test Infrastructure for Log Probability
+- [x] Step 2: Test Infrastructure for Log Probability
 - [ ] Step 3: Implement Log Probability Functions
 - [ ] Step 4: Test Infrastructure for Gradients
 - [ ] Step 5: Implement Gradient Function
@@ -49,9 +49,10 @@
 
 ### Completed Steps
 - **Step 1**: Project initialized with UV, dependencies installed (jax, jaxlib, matplotlib, pytest, jupyter), directory structure created
+- **Step 2**: Test infrastructure for log probability functions created (4 failing tests)
 
 ### Current Blockers
 None
 
 ### Next Actions
-Execute Step 2: Test Infrastructure for Log Probability
+Execute Step 3: Implement Log Probability Functions
