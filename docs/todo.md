@@ -2,7 +2,7 @@
 
 ## Status: In Progress
 
-**Current Step**: Step 5 - Implement Gradient Function
+**Current Step**: Step 6 - Test Infrastructure for Leapfrog Step
 
 ---
 
@@ -13,7 +13,7 @@
 - [x] Step 2: Test Infrastructure for Log Probability
 - [x] Step 3: Implement Log Probability Functions
 - [x] Step 4: Test Infrastructure for Gradients
-- [ ] Step 5: Implement Gradient Function
+- [x] Step 5: Implement Gradient Function
 
 ### Phase 2: Leapfrog Integrator
 - [ ] Step 6: Test Infrastructure for Leapfrog Step
@@ -52,9 +52,10 @@
 - **Step 2**: Test infrastructure for log probability functions created (4 failing tests)
 - **Step 3**: Implemented log_prior, log_likelihood, and log_posterior functions in hmc/sampler.py. All 4 tests passing.
 - **Step 4**: Added gradient test infrastructure with 3 tests and numerical_gradient helper. Tests fail with ImportError as expected.
+- **Step 5**: Implemented grad_log_posterior using JAX autodiff. All 7 tests passing (adjusted numerical test tolerances).
 
 ### Current Blockers
 None
 
 ### Next Actions
-Execute Step 5: Implement Gradient Function
+Execute Step 6: Test Infrastructure for Leapfrog Step
