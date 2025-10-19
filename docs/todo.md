@@ -2,7 +2,7 @@
 
 ## Status: In Progress
 
-**Current Step**: Step 19 - Command-Line Script - Part 2 (Plotting & Output)
+**Current Step**: Step 20 - Jupyter Notebook - Setup and Data
 
 ---
 
@@ -35,7 +35,7 @@
 ### Phase 5: Visualization & Interfaces
 - [x] Step 17: Visualization Utilities
 - [x] Step 18: Command-Line Script - Part 1 (Core Logic)
-- [ ] Step 19: Command-Line Script - Part 2 (Plotting & Output)
+- [x] Step 19: Command-Line Script - Part 2 (Plotting & Output)
 
 ### Phase 6: Documentation & Demo
 - [ ] Step 20: Jupyter Notebook - Setup and Data
@@ -66,9 +66,10 @@
 - **Step 16**: Created comprehensive integration test for full HMC pipeline on synthetic regression data. Tests verify sample structure, variation, parameter recovery, and exploration. Uses tuned hyperparameters (epsilon=0.001, n_steps=15) for reliable sampling. Integration test passes.
 - **Step 17**: Added plot_trace function to hmc/utils.py for creating trace plots. Function takes dictionary of parameter arrays and creates subplot for each parameter. Added comprehensive test verifying figure creation, subplot count, and axis labels. All 28 tests passing.
 - **Step 18**: Created executable command-line script scripts/run_comparison.py with PEP 723 metadata. Script compares HMC sampling with fixed vs random seeds, generates synthetic data, runs two HMC chains, and provides comprehensive argument parsing. Tested with various parameter combinations. Script location: scripts/run_comparison.py:1-144
+- **Step 19**: Added plotting and output to comparison script. Creates 2x3 subplot grid comparing fixed vs random seed traces (top row: fixed seed, bottom row: random seed). Saves high-quality PNG output (dpi=150) to configurable path. Tested successfully generating 178KB plot file. Script now fully functional end-to-end. Script location: scripts/run_comparison.py:132-171
 
 ### Current Blockers
 None
 
 ### Next Actions
-Execute Step 19: Command-Line Script - Part 2 (Plotting & Output)
+Execute Step 20: Jupyter Notebook - Setup and Data
