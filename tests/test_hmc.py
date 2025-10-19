@@ -1,7 +1,6 @@
 # ABOUTME: Test suite for HMC sampler core functionality.
 # ABOUTME: Tests log probability functions, gradients, leapfrog integrator, and sampling.
 
-import pytest
 import jax.numpy as jnp
 from hmc.sampler import log_prior, log_likelihood, log_posterior
 
