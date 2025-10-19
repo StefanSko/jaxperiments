@@ -1,4 +1,5 @@
-# ABOUTME: Integration tests for the full HMC sampling pipeline on synthetic data.
+# ABOUTME: Integration tests for the complete HMC sampling pipeline.
+# ABOUTME: Tests end-to-end workflow from data generation through sampling to validation.
 
 import jax.numpy as jnp
 import jax.random as random
@@ -20,9 +21,11 @@ def test_full_regression_sampling():
                                     m_true=m_true, b_true=b_true,
                                     sigma_true=sigma_true)
 
-    # Set up HMC configuration with smaller values for faster testing
-    # Use moderate epsilon and more samples for better exploration
-    config = get_hmc_config(epsilon=0.001, n_steps=15, n_warmup=100, n_samples=300)
+    # Set up HMC configuration
+    # Use moderate epsilon for stable sampling with good initialization
+    n_warmup = 100
+    n_samples = 200
+    config = get_hmc_config(epsilon=0.001, n_steps=15)
 
     # Initial parameters - use reasonable starting values to avoid extreme gradients
     initial_q = {"m": 2.0, "b": 0.5, "log_sigma": -0.5}
@@ -31,31 +34,29 @@ def test_full_regression_sampling():
     def log_prob_fn(q):
         return log_posterior(q, x, y)
 
-    # Run HMC sampler
-    samples = hmc_sample(
+    # Run HMC sampler (returns all samples including warmup)
+    all_samples = hmc_sample(
         key_sample,
         initial_q,
-        n_samples=config["n_samples"],
+        n_samples=n_warmup + n_samples,
         epsilon=config["epsilon"],
         n_steps=config["n_steps"],
         log_prob_fn=log_prob_fn
     )
 
-    # Verify samples have correct structure
-    assert "m" in samples, "Samples should contain 'm'"
-    assert "b" in samples, "Samples should contain 'b'"
-    assert "log_sigma" in samples, "Samples should contain 'log_sigma'"
+    # Verify all samples have correct structure and shapes
+    total_samples = n_warmup + n_samples
+    assert "m" in all_samples, "Samples should contain 'm'"
+    assert "b" in all_samples, "Samples should contain 'b'"
+    assert "log_sigma" in all_samples, "Samples should contain 'log_sigma'"
+    assert all_samples["m"].shape == (total_samples,), f"Expected m shape ({total_samples},), got {all_samples['m'].shape}"
+    assert all_samples["b"].shape == (total_samples,), f"Expected b shape ({total_samples},), got {all_samples['b'].shape}"
+    assert all_samples["log_sigma"].shape == (total_samples,), f"Expected log_sigma shape ({total_samples},), got {all_samples['log_sigma'].shape}"
 
-    # Verify sample shapes
-    assert samples["m"].shape == (config["n_samples"],), f"Expected m shape ({config['n_samples']},), got {samples['m'].shape}"
-    assert samples["b"].shape == (config["n_samples"],), f"Expected b shape ({config['n_samples']},), got {samples['b'].shape}"
-    assert samples["log_sigma"].shape == (config["n_samples"],), f"Expected log_sigma shape ({config['n_samples']},), got {samples['log_sigma'].shape}"
-
-    # Discard warmup (first half of samples for this test)
-    warmup_discard = config["n_samples"] // 2
-    m_samples = samples["m"][warmup_discard:]
-    b_samples = samples["b"][warmup_discard:]
-    log_sigma_samples = samples["log_sigma"][warmup_discard:]
+    # Discard warmup samples (first n_warmup samples)
+    m_samples = all_samples["m"][n_warmup:]
+    b_samples = all_samples["b"][n_warmup:]
+    log_sigma_samples = all_samples["log_sigma"][n_warmup:]
 
     # Verify samples vary (not all identical)
     assert jnp.std(m_samples) > 0, "m samples should vary"

@@ -7,10 +7,10 @@ import jax.random as random
 
 # Default HMC hyperparameters
 DEFAULT_HMC_CONFIG = {
-    "epsilon": 0.01,
-    "n_steps": 20,
-    "n_warmup": 500,
-    "n_samples": 1000,
+    "epsilon": 0.01,        # Step size for leapfrog integration
+    "n_steps": 20,          # Number of leapfrog steps per HMC iteration
+    "n_warmup": 500,        # Number of warmup samples to discard (user must handle)
+    "n_samples": 1000,      # Number of post-warmup samples to keep
 }
 
 
