@@ -1,6 +1,7 @@
 # ABOUTME: Core HMC sampling functions including log probability and gradient computations.
 # ABOUTME: Implements leapfrog integrator and Metropolis-Hastings acceptance for HMC.
 
+import jax
 import jax.numpy as jnp
 from jax.scipy.stats import norm
 
@@ -61,3 +62,20 @@ def log_posterior(params, x, y):
         Scalar log posterior probability
     """
     return log_prior(params) + log_likelihood(params, x, y)
+
+
+def grad_log_posterior(params, x, y):
+    """Compute gradient of log posterior with respect to parameters.
+
+    Uses JAX automatic differentiation to compute gradients.
+
+    Args:
+        params: Dict with keys "m", "b", "log_sigma"
+        x: Array of input values
+        y: Array of observed output values
+
+    Returns:
+        Dict with same structure as params containing gradients
+    """
+    grad_fn = jax.grad(log_posterior)
+    return grad_fn(params, x, y)
