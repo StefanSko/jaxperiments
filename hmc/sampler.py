@@ -82,3 +82,34 @@ def grad_log_posterior(params, x, y):
         Dict with same structure as params containing gradients
     """
     return _grad_log_posterior_fn(params, x, y)
+
+
+def leapfrog_step(q, p, epsilon, grad_log_prob_fn):
+    """Perform a single leapfrog integration step.
+
+    Implements the standard leapfrog (Störmer-Verlet) integrator:
+    1. Half step for momentum: p = p + (epsilon/2) * grad_log_prob(q)
+    2. Full step for position: q = q + epsilon * p
+    3. Half step for momentum: p = p + (epsilon/2) * grad_log_prob(q)
+
+    Args:
+        q: Current position (dict with parameter values)
+        p: Current momentum (dict with same structure as q)
+        epsilon: Step size for integration
+        grad_log_prob_fn: Function that computes gradient of log probability
+
+    Returns:
+        Tuple (q_new, p_new) with updated position and momentum
+    """
+    # Half step for momentum
+    grad = grad_log_prob_fn(q)
+    p_half = {key: p[key] + 0.5 * epsilon * grad[key] for key in p}
+
+    # Full step for position
+    q_new = {key: q[key] + epsilon * p_half[key] for key in q}
+
+    # Half step for momentum
+    grad_new = grad_log_prob_fn(q_new)
+    p_new = {key: p_half[key] + 0.5 * epsilon * grad_new[key] for key in p_half}
+
+    return q_new, p_new
