@@ -344,3 +344,124 @@ def test_leapfrog_trajectory():
             f"q_final[{key}] should match manual iteration"
         assert jnp.allclose(p_final[key], p_manual[key], rtol=1e-10), \
             f"p_final[{key}] should match manual iteration"
+
+
+def test_hmc_step_returns_state():
+    """HMC step should return new position and acceptance info."""
+    from hmc.sampler import hmc_step
+
+    x = jnp.array([1.0, 2.0, 3.0, 4.0, 5.0])
+    y = jnp.array([2.1, 4.0, 5.9, 8.2, 10.1])
+
+    q = {"m": 2.0, "b": 0.0, "log_sigma": -0.5}
+    epsilon = 0.01
+    n_steps = 10
+
+    def log_prob_fn(params):
+        return log_posterior(params, x, y)
+
+    key = jax.random.PRNGKey(42)
+    q_new, accepted = hmc_step(key, q, epsilon, n_steps, log_prob_fn)
+
+    # Check outputs
+    assert isinstance(q_new, dict), "q_new should be a dict"
+    assert set(q_new.keys()) == set(q.keys()), "q_new should have same keys as q"
+    assert isinstance(accepted, (bool, jnp.ndarray)), "accepted should be a boolean"
+
+    # Check all values are scalars
+    for key_name in q_new:
+        assert jnp.ndim(q_new[key_name]) == 0, f"q_new[{key_name}] should be scalar"
+
+
+def test_hmc_step_accepts_better_states():
+    """HMC should accept moves when energy is well conserved."""
+    from hmc.sampler import hmc_step
+
+    x = jnp.array([1.0, 2.0, 3.0, 4.0, 5.0])
+    y = jnp.array([2.1, 4.0, 5.9, 8.2, 10.1])
+
+    # Start at a reasonable position with well-tuned parameters
+    # (small epsilon ensures good energy conservation and high acceptance)
+    q = {"m": 3.0, "b": 1.0, "log_sigma": -0.5}
+    epsilon = 0.01  # Small step size for good energy conservation
+    n_steps = 10
+
+    def log_prob_fn(params):
+        return log_posterior(params, x, y)
+
+    # Run multiple HMC steps and check acceptance rate
+    # With small step size, should have high acceptance rate
+    acceptances = []
+    key = jax.random.PRNGKey(12345)
+    for i in range(30):
+        key, subkey = jax.random.split(key)
+        q_new, accepted = hmc_step(subkey, q, epsilon, n_steps, log_prob_fn)
+        acceptances.append(bool(accepted))
+        if accepted:
+            q = q_new  # Update position if accepted
+
+    # Should have at least some acceptances (typically most with small epsilon)
+    acceptance_rate = sum(acceptances) / len(acceptances)
+    assert acceptance_rate > 0.3, f"Should accept at least 30% of proposals, got {acceptance_rate}"
+
+
+def test_hmc_step_rejects_worse_states():
+    """HMC should reject moves with larger step size."""
+    from hmc.sampler import hmc_step
+
+    x = jnp.array([1.0, 2.0, 3.0, 4.0, 5.0])
+    y = jnp.array([2.1, 4.0, 5.9, 8.2, 10.1])
+
+    # Start at a good position but use moderate step size to get some rejections
+    q = {"m": 2.0, "b": 0.0, "log_sigma": -0.5}
+    epsilon = 0.1  # Moderate step size for balance of accept/reject
+    n_steps = 20
+
+    def log_prob_fn(params):
+        return log_posterior(params, x, y)
+
+    # Run multiple HMC steps
+    acceptances = []
+    key = jax.random.PRNGKey(67890)
+    for i in range(100):
+        key, subkey = jax.random.split(key)
+        q_new, accepted = hmc_step(subkey, q, epsilon, n_steps, log_prob_fn)
+        acceptances.append(bool(accepted))
+        if accepted:
+            q = q_new
+
+    # With moderate epsilon, should have some rejections but not too many
+    acceptance_rate = sum(acceptances) / len(acceptances)
+    assert acceptance_rate < 0.99, f"Should reject at least some proposals, got {acceptance_rate}"
+    assert acceptance_rate > 0.01, f"Should still accept some proposals, got {acceptance_rate}"
+
+
+def test_hmc_step_uses_random_key():
+    """Different random keys should give different results."""
+    from hmc.sampler import hmc_step
+
+    x = jnp.array([1.0, 2.0, 3.0, 4.0, 5.0])
+    y = jnp.array([2.1, 4.0, 5.9, 8.2, 10.1])
+
+    q = {"m": 2.0, "b": 0.0, "log_sigma": -0.5}
+    epsilon = 0.01
+    n_steps = 10
+
+    def log_prob_fn(params):
+        return log_posterior(params, x, y)
+
+    # Run with two different keys
+    key1 = jax.random.PRNGKey(111)
+    key2 = jax.random.PRNGKey(222)
+
+    q_new1, accepted1 = hmc_step(key1, q, epsilon, n_steps, log_prob_fn)
+    q_new2, accepted2 = hmc_step(key2, q, epsilon, n_steps, log_prob_fn)
+
+    # Results should differ (at least for some parameter)
+    results_differ = False
+    for key_name in q:
+        if not jnp.allclose(q_new1[key_name], q_new2[key_name]):
+            results_differ = True
+            break
+
+    assert results_differ, "Different random keys should produce different results"

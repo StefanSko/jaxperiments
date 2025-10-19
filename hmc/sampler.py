@@ -134,3 +134,56 @@ def leapfrog(q, p, epsilon, n_steps, grad_log_prob_fn):
         q_current, p_current = leapfrog_step(q_current, p_current, epsilon, grad_log_prob_fn)
 
     return q_current, p_current
+
+
+def hmc_step(key, q, epsilon, n_steps, log_prob_fn):
+    """Perform a single HMC step with Metropolis acceptance.
+
+    Args:
+        key: JAX random key for momentum sampling and acceptance
+        q: Current position (dict with parameter values)
+        epsilon: Step size for leapfrog integration
+        n_steps: Number of leapfrog steps per HMC step
+        log_prob_fn: Function that computes log probability at position q
+
+    Returns:
+        Tuple (q_new, accepted) where:
+            - q_new is the new position (dict)
+            - accepted is a boolean indicating if proposal was accepted
+    """
+    # Split key for momentum sampling and acceptance
+    key_momentum, key_accept = jax.random.split(key)
+
+    # Sample momentum from standard normal (split keys for each parameter)
+    param_keys = jax.random.split(key_momentum, len(q))
+    p = {k: jax.random.normal(param_keys[i], shape=()) for i, k in enumerate(q)}
+
+    # Compute initial energy (Hamiltonian)
+    # H = -log_prob(q) + 0.5 * ||p||^2
+    log_prob_current = log_prob_fn(q)
+    kinetic_current = 0.5 * jnp.sum(jnp.array([p[k]**2 for k in p]))
+    H_current = -log_prob_current + kinetic_current
+
+    # Create gradient function
+    grad_fn = jax.grad(log_prob_fn)
+
+    # Run leapfrog to get proposal
+    q_proposal, p_proposal = leapfrog(q, p, epsilon, n_steps, grad_fn)
+
+    # Compute proposal energy
+    log_prob_proposal = log_prob_fn(q_proposal)
+    kinetic_proposal = 0.5 * jnp.sum(jnp.array([p_proposal[k]**2 for k in p_proposal]))
+    H_proposal = -log_prob_proposal + kinetic_proposal
+
+    # Metropolis acceptance probability
+    # Accept if exp(H_current - H_proposal) > uniform(0, 1)
+    # Equivalently: H_current - H_proposal > log(uniform)
+    log_accept_prob = H_current - H_proposal
+    log_u = jnp.log(jax.random.uniform(key_accept))
+
+    accepted = log_accept_prob > log_u
+
+    # Return accepted proposal or current position
+    q_new = jax.tree.map(lambda prop, curr: jnp.where(accepted, prop, curr), q_proposal, q)
+
+    return q_new, accepted
