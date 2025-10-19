@@ -249,7 +249,7 @@ def hamiltonian(q, p, log_prob_fn):
     potential = -log_prob_fn(q)
 
     # Kinetic energy: 0.5 * sum(p_i^2)
-    kinetic = 0.5 * sum(p[key]**2 for key in p)
+    kinetic = 0.5 * jnp.sum(jnp.array([p[key]**2 for key in p]))
 
     return potential + kinetic
 
