@@ -3,7 +3,7 @@
 import jax.numpy as jnp
 import jax.random as random
 import pytest
-from hmc.utils import generate_regression_data
+from hmc.utils import generate_regression_data, DEFAULT_HMC_CONFIG, get_hmc_config
 
 
 def test_generate_regression_data_shape():
@@ -49,3 +49,37 @@ def test_generate_regression_data_different_seeds():
 
     assert not jnp.allclose(x1, x2), "Different keys should produce different x values"
     assert not jnp.allclose(y1, y2), "Different keys should produce different y values"
+
+
+def test_default_config_values():
+    """Test that DEFAULT_HMC_CONFIG contains expected values."""
+    assert DEFAULT_HMC_CONFIG["epsilon"] == 0.01
+    assert DEFAULT_HMC_CONFIG["n_steps"] == 20
+    assert DEFAULT_HMC_CONFIG["n_warmup"] == 500
+    assert DEFAULT_HMC_CONFIG["n_samples"] == 1000
+
+
+def test_config_overrides():
+    """Test that get_hmc_config properly overrides default values."""
+    # Test with no overrides
+    config = get_hmc_config()
+    assert config == DEFAULT_HMC_CONFIG
+    assert config is not DEFAULT_HMC_CONFIG  # Should be a copy
+
+    # Test with single override
+    config = get_hmc_config(epsilon=0.05)
+    assert config["epsilon"] == 0.05
+    assert config["n_steps"] == 20  # Other values unchanged
+    assert config["n_warmup"] == 500
+    assert config["n_samples"] == 1000
+
+    # Test with multiple overrides
+    config = get_hmc_config(epsilon=0.02, n_steps=50, n_samples=2000)
+    assert config["epsilon"] == 0.02
+    assert config["n_steps"] == 50
+    assert config["n_warmup"] == 500  # Unchanged
+    assert config["n_samples"] == 2000
+
+    # Test that original DEFAULT_HMC_CONFIG is not modified
+    assert DEFAULT_HMC_CONFIG["epsilon"] == 0.01
+    assert DEFAULT_HMC_CONFIG["n_steps"] == 20

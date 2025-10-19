@@ -5,6 +5,29 @@ import jax.numpy as jnp
 import jax.random as random
 
 
+# Default HMC hyperparameters
+DEFAULT_HMC_CONFIG = {
+    "epsilon": 0.01,
+    "n_steps": 20,
+    "n_warmup": 500,
+    "n_samples": 1000,
+}
+
+
+def get_hmc_config(**overrides):
+    """Get HMC configuration with optional overrides.
+
+    Args:
+        **overrides: Keyword arguments to override default config values
+
+    Returns:
+        Dictionary with HMC configuration
+    """
+    config = DEFAULT_HMC_CONFIG.copy()
+    config.update(overrides)
+    return config
+
+
 def generate_regression_data(key, n_samples, m_true, b_true, sigma_true, x_range=(0, 10)):
     """Generate synthetic linear regression data.
 
