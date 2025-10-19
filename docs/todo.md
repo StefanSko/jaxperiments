@@ -2,7 +2,7 @@
 
 ## Status: In Progress
 
-**Current Step**: Step 6 - Test Infrastructure for Leapfrog Step
+**Current Step**: Step 7 - Implement Single Leapfrog Step
 
 ---
 
@@ -16,7 +16,7 @@
 - [x] Step 5: Implement Gradient Function
 
 ### Phase 2: Leapfrog Integrator
-- [ ] Step 6: Test Infrastructure for Leapfrog Step
+- [x] Step 6: Test Infrastructure for Leapfrog Step
 - [ ] Step 7: Implement Single Leapfrog Step
 - [ ] Step 8: Test Leapfrog Energy Conservation
 - [ ] Step 9: Implement Full Leapfrog Trajectory
@@ -53,9 +53,10 @@
 - **Step 3**: Implemented log_prior, log_likelihood, and log_posterior functions in hmc/sampler.py. All 4 tests passing.
 - **Step 4**: Added gradient test infrastructure with 3 tests and numerical_gradient helper. Tests fail with ImportError as expected.
 - **Step 5**: Implemented grad_log_posterior using JAX autodiff. All 7 tests passing (adjusted numerical test tolerances).
+- **Step 6**: Added leapfrog integrator test infrastructure with 4 tests (shapes, deterministic, modifies position, modifies momentum). Tests fail with ImportError as expected.
 
 ### Current Blockers
 None
 
 ### Next Actions
-Execute Step 6: Test Infrastructure for Leapfrog Step
+Execute Step 7: Implement Single Leapfrog Step

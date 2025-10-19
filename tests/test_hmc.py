@@ -3,7 +3,13 @@
 
 import jax
 import jax.numpy as jnp
-from hmc.sampler import log_prior, log_likelihood, log_posterior, grad_log_posterior
+from hmc.sampler import (
+    log_prior,
+    log_likelihood,
+    log_posterior,
+    grad_log_posterior,
+    leapfrog_step,
+)
 
 
 def test_log_prior_shape():
@@ -128,3 +134,98 @@ def test_grad_log_posterior_numerical():
         for key in params:
             assert jnp.isclose(grad_auto[key], grad_num[key], rtol=1e-3, atol=0.5), \
                 f"Gradient for {key} at params {params}: autodiff={grad_auto[key]}, numerical={grad_num[key]}"
+
+
+def test_leapfrog_step_shapes():
+    """Verify leapfrog output shapes match input shapes."""
+    q = {"m": 1.0, "b": 0.5, "log_sigma": -1.0}
+    p = {"m": 0.1, "b": -0.2, "log_sigma": 0.05}
+    epsilon = 0.01
+    x = jnp.array([1.0, 2.0, 3.0])
+    y = jnp.array([1.5, 2.5, 3.5])
+
+    # Create gradient function bound to data
+    def grad_fn(params):
+        return grad_log_posterior(params, x, y)
+
+    q_new, p_new = leapfrog_step(q, p, epsilon, grad_fn)
+
+    # Check that outputs are dicts with same keys
+    assert isinstance(q_new, dict), "q_new should be a dict"
+    assert isinstance(p_new, dict), "p_new should be a dict"
+    assert set(q_new.keys()) == set(q.keys()), "q_new should have same keys as q"
+    assert set(p_new.keys()) == set(p.keys()), "p_new should have same keys as p"
+
+    # Check that all values are scalars
+    for key in q_new:
+        assert jnp.ndim(q_new[key]) == 0, f"q_new[{key}] should be scalar"
+        assert jnp.ndim(p_new[key]) == 0, f"p_new[{key}] should be scalar"
+
+
+def test_leapfrog_step_deterministic():
+    """Same inputs should produce same outputs."""
+    q = {"m": 1.0, "b": 0.5, "log_sigma": -1.0}
+    p = {"m": 0.1, "b": -0.2, "log_sigma": 0.05}
+    epsilon = 0.01
+    x = jnp.array([1.0, 2.0, 3.0])
+    y = jnp.array([1.5, 2.5, 3.5])
+
+    def grad_fn(params):
+        return grad_log_posterior(params, x, y)
+
+    # Run twice with same inputs
+    q_new1, p_new1 = leapfrog_step(q, p, epsilon, grad_fn)
+    q_new2, p_new2 = leapfrog_step(q, p, epsilon, grad_fn)
+
+    # Results should be identical
+    for key in q:
+        assert jnp.allclose(q_new1[key], q_new2[key]), \
+            f"q_new[{key}] should be deterministic"
+        assert jnp.allclose(p_new1[key], p_new2[key]), \
+            f"p_new[{key}] should be deterministic"
+
+
+def test_leapfrog_step_modifies_position():
+    """Position should change after leapfrog step."""
+    q = {"m": 1.0, "b": 0.5, "log_sigma": -1.0}
+    p = {"m": 0.1, "b": -0.2, "log_sigma": 0.05}
+    epsilon = 0.01
+    x = jnp.array([1.0, 2.0, 3.0])
+    y = jnp.array([1.5, 2.5, 3.5])
+
+    def grad_fn(params):
+        return grad_log_posterior(params, x, y)
+
+    q_new, p_new = leapfrog_step(q, p, epsilon, grad_fn)
+
+    # At least one position component should change (typically all will)
+    position_changed = False
+    for key in q:
+        if not jnp.allclose(q[key], q_new[key]):
+            position_changed = True
+            break
+
+    assert position_changed, "Position should change after leapfrog step"
+
+
+def test_leapfrog_step_modifies_momentum():
+    """Momentum should change after leapfrog step."""
+    q = {"m": 1.0, "b": 0.5, "log_sigma": -1.0}
+    p = {"m": 0.1, "b": -0.2, "log_sigma": 0.05}
+    epsilon = 0.01
+    x = jnp.array([1.0, 2.0, 3.0])
+    y = jnp.array([1.5, 2.5, 3.5])
+
+    def grad_fn(params):
+        return grad_log_posterior(params, x, y)
+
+    q_new, p_new = leapfrog_step(q, p, epsilon, grad_fn)
+
+    # At least one momentum component should change (typically all will)
+    momentum_changed = False
+    for key in p:
+        if not jnp.allclose(p[key], p_new[key]):
+            momentum_changed = True
+            break
+
+    assert momentum_changed, "Momentum should change after leapfrog step"
