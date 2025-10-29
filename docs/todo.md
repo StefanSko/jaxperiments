@@ -39,7 +39,7 @@
 
 ### Phase 6: Documentation & Demo
 - [x] Step 20: Jupyter Notebook - Setup and Data
-- [ ] Step 21: Jupyter Notebook - HMC Sampling
+- [ ] Step 21: Jupyter Notebook - HMC Sampling & Research Validation
 - [ ] Step 22: Documentation and README
 - [ ] Step 23: Final Integration and Cleanup
 
@@ -72,5 +72,17 @@
 ### Current Blockers
 None
 
+### Research Validation Requirement
+
+**Core Hypothesis**: Using a fixed random seed in HMC breaks MCMC sampling by introducing excessive autocorrelation and poor mixing.
+
+**Before proceeding to Step 22**: Must empirically validate that:
+1. Fixed seed samples show higher autocorrelation than random seed samples
+2. Fixed seed samples have lower effective sample size (ESS)
+3. Fixed seed samples show poorer posterior exploration
+4. Quantitative metrics support the research claim
+
+This validation is critical to justify the project's educational purpose.
+
 ### Next Actions
-Execute Step 21: Jupyter Notebook - HMC Sampling
+Execute Step 21: Jupyter Notebook - HMC Sampling & Research Validation
