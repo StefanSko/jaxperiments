@@ -17,7 +17,7 @@ import jax.random as random
 import numpy as np
 
 from hmc.sampler import hmc_sample, log_posterior
-from hmc.sampler_buggy import hmc_sample_buggy_reuse_key
+from hmc.sampler_buggy import hmc_sample_buggy_internal_reset
 from hmc.utils import generate_regression_data
 
 
@@ -89,8 +89,9 @@ def main():
     print("RESEARCH VALIDATION: Is Proper Randomization Essential for MCMC?")
     print("=" * 80)
     print()
-    print("HYPOTHESIS: MCMC algorithms require proper random key management to converge.")
-    print("Improper handling (reusing keys) breaks the algorithm completely.")
+    print("HYPOTHESIS: MCMC algorithms require proper random key threading.")
+    print("Creating PRNGKey(0) inside a function (instead of passing it as a parameter)")
+    print("causes all iterations to use identical randomness, breaking MCMC convergence.")
     print()
 
     # Generate synthetic data
@@ -122,13 +123,13 @@ def main():
     print(f"  ✓ Completed {n_samples} samples")
     print()
 
-    # Run BUGGY HMC (reuses same key)
-    print("[3/4] Running BUGGY HMC (reuses same key without splitting)...")
+    # Run BUGGY HMC (internally resets key to PRNGKey(0))
+    print("[3/4] Running BUGGY HMC (internally resets key to PRNGKey(0))...")
     print(f"  Config: epsilon={epsilon}, n_steps={n_steps}, n_samples={n_samples}")
-    print(f"  ⚠️  WARNING: This implementation intentionally mishandles random keys!")
-    buggy_key = random.PRNGKey(0)
-    samples_buggy = hmc_sample_buggy_reuse_key(
-        buggy_key, initial_params, n_samples, epsilon, n_steps, log_prob_fn
+    print(f"  ⚠️  WARNING: This replicates the actual bug from Laplacean project!")
+    print(f"  ⚠️  Each HMC step creates PRNGKey(0) internally → identical randomness!")
+    samples_buggy = hmc_sample_buggy_internal_reset(
+        initial_params, n_samples, epsilon, n_steps, log_prob_fn
     )
     print(f"  ✓ Completed {n_samples} samples")
     print()
