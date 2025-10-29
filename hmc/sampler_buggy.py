@@ -70,10 +70,13 @@ def hmc_step_buggy_internal_reset(q, epsilon, n_steps, log_prob_fn, grad_log_pro
 
 
 def hmc_sample_buggy_internal_reset(initial_q, n_samples, epsilon, n_steps, log_prob_fn):
-    """Buggy HMC sampler that calls hmc_step_buggy_internal_reset in a loop.
+    """Buggy HMC sampler that uses scan but still has the PRNGKey(0) bug.
 
     This replicates the actual bug pattern: each HMC step internally creates
     PRNGKey(0), causing all iterations to use identical randomness.
+
+    Even though we use jax.lax.scan for efficiency, the bug still manifests
+    because the key is created inside the scanned function.
 
     DO NOT USE THIS IN PRODUCTION. This is intentionally broken for educational purposes.
 
@@ -91,23 +94,21 @@ def hmc_sample_buggy_internal_reset(initial_q, n_samples, epsilon, n_steps, log_
     # Pre-compute gradient function once for efficiency
     grad_log_prob_fn = jax.grad(log_prob_fn)
 
-    # Collect samples
-    param_names = sorted(initial_q.keys())
-    samples = {name: [] for name in param_names}
+    def scan_fn(carry, _):
+        """Single iteration of buggy HMC for jax.lax.scan.
 
-    q_current = initial_q
-    for i in range(n_samples):
-        # BUG: Each call to hmc_step_buggy_internal_reset uses PRNGKey(0)!
-        q_current, accepted = hmc_step_buggy_internal_reset(
+        Note: The second argument (_) would normally be a key, but we ignore it
+        because the bug creates PRNGKey(0) inside hmc_step_buggy_internal_reset.
+        """
+        q_current = carry
+        # BUG: hmc_step_buggy_internal_reset creates PRNGKey(0) internally!
+        q_new, accepted = hmc_step_buggy_internal_reset(
             q_current, epsilon, n_steps, log_prob_fn, grad_log_prob_fn
         )
+        return q_new, q_new
 
-        # Store sample
-        for name in param_names:
-            samples[name].append(q_current[name])
-
-    # Convert to arrays
-    samples_dict = {name: jnp.array(samples[name]) for name in param_names}
+    # Run scan - note we pass None as the array to scan over since we don't use it
+    _, samples_dict = jax.lax.scan(scan_fn, initial_q, None, length=n_samples)
 
     return samples_dict
 
