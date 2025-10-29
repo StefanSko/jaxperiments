@@ -550,9 +550,11 @@ Test by running: `uv run jupyter notebook` and executing cells.
 
 ---
 
-### Step 21: Jupyter Notebook - HMC Sampling
+### Step 21: Jupyter Notebook - HMC Sampling & Research Validation
 
-**Context**: Add HMC sampling to notebook.
+**Context**: Add HMC sampling to notebook and validate the research hypothesis that fixed seeds break MCMC sampling.
+
+**Research Question**: Does using a fixed random seed in HMC sampling introduce problematic autocorrelation and poor mixing that defeats the purpose of MCMC sampling? This demonstrates why blindly fixing seeds for "reproducibility" can be harmful in stochastic algorithms.
 
 **Prompt**:
 ```
@@ -565,15 +567,27 @@ Add to notebooks/demonstration.ipynb:
 
 6. Cell: Run HMC with random seed
    - Same config
-   - Run sampler  
+   - Run sampler
    - Print acceptance rate
 
 7. Cell: Plot both trace plots side by side
 
-Test the notebook end-to-end.
+8. Cell: Research Validation - Compute and compare:
+   - Autocorrelation for each parameter (lag 1, 5, 10)
+   - Effective sample size (ESS) using standard formula
+   - Sample variance/standard deviation
+   - Visual comparison showing fixed seed has higher autocorrelation
+   - Statistical evidence that fixed seed produces inferior samples
+
+9. Cell: Interpretation
+   - Explain findings
+   - Discuss implications for reproducibility vs. correctness
+   - Highlight why MCMC requires proper randomness
+
+Test the notebook end-to-end and verify that fixed seed shows measurably worse autocorrelation.
 ```
 
-**Expected outcome**: Complete notebook showing the autocorrelation effect.
+**Expected outcome**: Complete notebook showing the autocorrelation effect WITH quantitative validation that fixed seed breaks MCMC sampling.
 
 ---
 
@@ -634,7 +648,19 @@ This plan breaks down the HMC sampler into 23 incremental steps:
 - Steps 10-13: HMC sampling core
 - Steps 14-16: Utilities and integration
 - Steps 17-19: Command-line interface
-- Steps 20-21: Jupyter notebook
+- Steps 20-21: Jupyter notebook with research validation
 - Steps 22-23: Documentation and polish
 
 Each step is small enough to implement safely with tests, but substantial enough to make meaningful progress. Every step builds on previous work with no orphaned code.
+
+## Research Validation
+
+**Core Hypothesis**: Using a fixed random seed in MCMC sampling (specifically HMC) produces samples with higher autocorrelation and poorer mixing compared to proper random seeding. This demonstrates why blindly fixing random seeds for "reproducibility" can produce scientifically invalid results in stochastic algorithms.
+
+**Validation Metrics**:
+- Autocorrelation function at various lags
+- Effective Sample Size (ESS)
+- Sample variance and exploration
+- Visual trace plot comparison
+
+**Expected Finding**: Fixed seed samples will show significantly higher autocorrelation and lower effective sample size, demonstrating that the fixed seed breaks the MCMC algorithm's ability to properly explore the posterior distribution.

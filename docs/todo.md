@@ -2,7 +2,7 @@
 
 ## Status: In Progress
 
-**Current Step**: Step 20 - Jupyter Notebook - Setup and Data
+**Current Step**: Step 21 - Jupyter Notebook - HMC Sampling
 
 ---
 
@@ -38,8 +38,8 @@
 - [x] Step 19: Command-Line Script - Part 2 (Plotting & Output)
 
 ### Phase 6: Documentation & Demo
-- [ ] Step 20: Jupyter Notebook - Setup and Data
-- [ ] Step 21: Jupyter Notebook - HMC Sampling
+- [x] Step 20: Jupyter Notebook - Setup and Data
+- [ ] Step 21: Jupyter Notebook - HMC Sampling & Research Validation
 - [ ] Step 22: Documentation and README
 - [ ] Step 23: Final Integration and Cleanup
 
@@ -67,9 +67,22 @@
 - **Step 17**: Added plot_trace function to hmc/utils.py for creating trace plots. Function takes dictionary of parameter arrays and creates subplot for each parameter. Added comprehensive test verifying figure creation, subplot count, and axis labels. All 28 tests passing.
 - **Step 18**: Created executable command-line script scripts/run_comparison.py with PEP 723 metadata. Script compares HMC sampling with fixed vs random seeds, generates synthetic data, runs two HMC chains, and provides comprehensive argument parsing. Tested with various parameter combinations. Script location: scripts/run_comparison.py:1-144
 - **Step 19**: Added plotting and output to comparison script. Creates 2x3 subplot grid comparing fixed vs random seed traces (top row: fixed seed, bottom row: random seed). Saves high-quality PNG output (dpi=150) to configurable path. Tested successfully generating 178KB plot file. Script now fully functional end-to-end. Script location: scripts/run_comparison.py:132-171
+- **Step 20**: Created notebooks/demonstration.ipynb with introduction, imports (including proper path setup for hmc module), data generation cell displaying true parameters, and scatter plot visualization of synthetic regression data. Tested notebook execution successfully. Notebook location: notebooks/demonstration.ipynb:1-130
 
 ### Current Blockers
 None
 
+### Research Validation Requirement
+
+**Core Hypothesis**: Using a fixed random seed in HMC breaks MCMC sampling by introducing excessive autocorrelation and poor mixing.
+
+**Before proceeding to Step 22**: Must empirically validate that:
+1. Fixed seed samples show higher autocorrelation than random seed samples
+2. Fixed seed samples have lower effective sample size (ESS)
+3. Fixed seed samples show poorer posterior exploration
+4. Quantitative metrics support the research claim
+
+This validation is critical to justify the project's educational purpose.
+
 ### Next Actions
-Execute Step 20: Jupyter Notebook - Setup and Data
+Execute Step 21: Jupyter Notebook - HMC Sampling & Research Validation
